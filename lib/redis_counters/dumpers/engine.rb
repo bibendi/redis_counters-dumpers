@@ -2,7 +2,6 @@ require 'forwardable'
 require 'callbacks_rb'
 require 'active_support/core_ext/hash/indifferent_access'
 require 'redis'
-require 'redis/namespace'
 require 'redis_counters'
 require_relative 'dsl/engine'
 
@@ -243,7 +242,11 @@ module RedisCounters
                  end
         redis = ::Redis.new(client.options)
 
-        @redis_session = ::Redis::Namespace.new(counter.redis.namespace, redis: redis)
+        @redis_session = if counter.redis.respond_to?(:namespace)
+          ::Redis::Namespace.new(counter.redis.namespace, redis: redis)
+        else
+          redis
+        end
       end
 
       def create_temp_table
